@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:http/http.dart';
+import 'package:http/io_client.dart';
 import 'package:signalr_netcore/ihub_protocol.dart';
 import 'errors.dart';
 import 'signalr_http_client.dart';
@@ -38,7 +40,15 @@ class WebSupportingHttpClient extends SignalRHttpClient {
     return Future<SignalRHttpResponse>(() async {
       final uri = Uri.parse(request.url!);
 
-      final httpClient = Client();
+      var httpClient = Client();
+
+      if (httpClient is IOClient) {
+        final innerClient = HttpClient();
+        innerClient.badCertificateCallback =
+            (X509Certificate cert, String host, int port) => true;
+        httpClient = IOClient(innerClient);
+      }
+
       if (_httpClientCreateCallback != null) {
         _httpClientCreateCallback!(httpClient);
       }
